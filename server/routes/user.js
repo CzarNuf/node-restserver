@@ -3,10 +3,11 @@ const bcrypt = require('bcryptjs');
 const _ = require('underscore');
 
 const User = require('../models/user');
+const { verifyToken, verifyAdminRole } = require('../middlewares/authorization');
 
 const app = express();
 
-app.get('/user', function(req, res) {
+app.get('/user', verifyToken, (req, res) => {
   let page = Number(req.query.page || 1);
   page = page <= 0 ? 1 : page;
   const fetch = Number(req.query.fetch || 5);
@@ -38,7 +39,7 @@ app.get('/user', function(req, res) {
     });
 });
 
-app.post('/user', function(req, res) {
+app.post('/user', [verifyToken, verifyAdminRole], function(req, res) {
   const body = req.body;
 
   let user = new User({
@@ -63,7 +64,7 @@ app.post('/user', function(req, res) {
   });
 });
 
-app.put('/user/:id', function(req, res) {
+app.put('/user/:id', [verifyToken, verifyAdminRole], function(req, res) {
   const id = req.params.id
   const body = _.pick(req.body, ['name', 'email', 'img', 'role', 'state']);
 
@@ -82,7 +83,7 @@ app.put('/user/:id', function(req, res) {
   });
 });
 
-app.delete('/user/:id', function(req, res) {
+app.delete('/user/:id', [verifyToken, verifyAdminRole], function(req, res) {
   let id = req.params.id;
 
   User.findByIdAndUpdate(id, { state: false }, { new: true }, (err, userDeleted) => {
